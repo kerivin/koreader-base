@@ -25,6 +25,7 @@ typedef struct DrawContext {
 	int offset_x;
 	int offset_y;
     int isolate_smask;
+    int white_threshold;
 } DrawContext;
 
 #endif

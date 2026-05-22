@@ -14,6 +14,7 @@ typedef struct DrawContext {
 	int offset_x;
 	int offset_y;
 	int isolate_smask;
+	int white_threshold;
 } DrawContext;
 ]]
 
@@ -33,6 +34,8 @@ function DC_mt.__index:setGamma(gamma) self.gamma = gamma end
 function DC_mt.__index:getGamma() return self.gamma end
 function DC_mt.__index:setIsolateSMask(isolate_smask) self.isolate_smask = isolate_smask end
 function DC_mt.__index:getIsolateSMask() return self.isolate_smask end
+function DC_mt.__index:setWhiteThreshold(white_threshold) self.white_threshold = white_threshold end
+function DC_mt.__index:getWhiteThreshold() return self.white_threshold end
 
 local dctype = ffi.metatype("DrawContext", DC_mt)
 

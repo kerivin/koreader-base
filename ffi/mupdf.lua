@@ -736,6 +736,10 @@ function page_mt.__index:draw_new(draw_context, width, height, offset_x, offset_
         M.fz_gamma_pixmap(self.ctx, pix, draw_context.gamma)
     end
 
+    if (draw_context.white_threshold ~= 255) then
+        bb:paintWhiteThreshold(draw_context.white_threshold)
+    end
+
     M.fz_drop_pixmap(self.ctx, pix)
 
     return bb

@@ -2508,6 +2508,14 @@ function BB_mt.__index:writeToFile(filename, format, quality, grayscale)
     end
 end
 
+function BB_mt.__index:paintWhiteThreshold(white_threshold)
+    white_threshold = white_threshold or 255
+    if white_threshold == 255 then
+        return
+    end
+    // TODO
+end
+
 -- if no special case in BB???_mt exists, use function from BB_mt
 -- (we do not use BB_mt as metatable for BB???_mt since this causes
 -- a major slowdown and would not get properly JIT-compiled)
