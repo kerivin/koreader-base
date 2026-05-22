@@ -562,6 +562,17 @@ function KOPTContext_mt.__index:exportSrcPNGString(pboxes, drawer)
     end
 end
 
+function KOPTContext_mt.__index:binarize(white_threshold)
+    if self.src.data then
+        local pixs = bitmap2pix(self.src, 0, 0, self.src.width, self.src.height)
+        local bpp = leptonica.pixGetDepth(pixs)
+        local pixtb = ffi.new("PIX *[1]")
+        leptonica.pixOtsuAdaptiveThreshold(pixs, 64, 64, 0, 0, 0.1, pixtb, nil)
+        pixtb = _gc_ptr(pixtb[0], pixDestroy)
+        ffi.copy(self.src.data, pixtb, ffi.sizeof(self.src.data))
+    end
+end
+
 function KOPTContext_mt.__index:optimizePage()
     k2pdfopt.k2pdfopt_optimize_bmp(self)
 end

@@ -53,4 +53,10 @@ BOXA *pixSplitIntoBoxa(PIX *pixs, l_int32 minsum, l_int32 skipdist, l_int32 delt
 PIX *pixThresholdToBinary(PIX *pixs, l_int32 thresh);
 l_ok pixWriteMemPng(l_uint8 **pfiledata, size_t *pfilesize, PIX *pix, l_float32 gamma);
 l_ok pixWritePng(const char *filename, PIX *pix, l_float32 gamma);
+l_ok pixOtsuAdaptiveThreshold(PIX *pixs, l_int32 sx, l_int32 sy, l_int32 smoothx, l_int32 smoothy, l_float32 scorefract, PIX **ppixth, PIX **ppixd);
+PIX *pixOtsuThreshOnBackgroundNorm(PIX *pixs, PIX *pixim, l_int32 sx, l_int32 sy, l_int32 thresh, l_int32 mincount, l_int32 bgval, l_int32 smoothx, l_int32 smoothy, l_float32 scorefract, l_int32 *pthresh);
+PIX *pixMaskedThreshOnBackgroundNorm(PIX *pixs, PIX *pixim, l_int32 sx, l_int32 sy, l_int32 thresh, l_int32 mincount, l_int32 smoothx, l_int32 smoothy, l_float32 scorefract, l_int32 *pthresh);
+l_ok pixSauvolaBinarizeTiled(PIX *pixs, l_int32 whsize, l_float32 factor, l_int32 nx, l_int32 ny, PIX **ppixth, PIX **ppixd);
+l_ok pixSauvolaBinarize(PIX *pixs, l_int32 whsize, l_float32 factor, l_int32 addborder, PIX **ppixm, PIX **ppixsd, PIX **ppixth, PIX **ppixd);
+PIX *pixSauvolaOnContrastNorm(PIX *pixs, l_int32 mindiff, PIX **ppixn, PIX **ppixth);
 ]]
