@@ -164,6 +164,12 @@ MUPDF_WRAP(mupdf_pdf_annot_type, int, -1,
 MUPDF_WRAP(mupdf_pdf_annot_contents, const char*, NULL,
      ret = pdf_annot_contents(ctx, annot),
      pdf_annot *annot)
+MUPDF_WRAP(mupdf_pdf_annot_author, const char*, NULL,
+     ret = pdf_annot_author(ctx, annot),
+     pdf_annot *annot)
+MUPDF_WRAP_BOOL(mupdf_pdf_set_annot_author,
+    pdf_set_annot_author(ctx, annot, author),
+    pdf_annot *annot, const char *author)
 MUPDF_WRAP(mupdf_pdf_create_annot, pdf_annot*, NULL,
     ret = pdf_create_annot(ctx, page, type),
     pdf_page *page, enum pdf_annot_type type)
@@ -202,6 +208,27 @@ MUPDF_WRAP_BOOL(mupdf_pdf_set_annot_border_width,
     pdf_annot *annot, float width)
 MUPDF_WRAP_BOOL(mupdf_pdf_update_annot,
     pdf_update_annot(ctx, annot),
+    pdf_annot *annot)
+MUPDF_WRAP(mupdf_pdf_annot_ink_list_count, int, -1,
+    ret = pdf_annot_ink_list_count(ctx, annot),
+    pdf_annot *annot)
+MUPDF_WRAP(mupdf_pdf_annot_ink_list_stroke_count, int, -1,
+    ret = pdf_annot_ink_list_stroke_count(ctx, annot, i),
+    pdf_annot *annot, int i)
+MUPDF_WRAP_BOOL(mupdf_pdf_annot_ink_list_stroke_vertex,
+    *pv = pdf_annot_ink_list_stroke_vertex(ctx, annot, i, k),
+    pdf_annot *annot, int i, int k, fz_point *pv)
+MUPDF_WRAP_BOOL(mupdf_pdf_annot_color,
+    pdf_annot_color(ctx, annot, n, color),
+    pdf_annot *annot, int *n, float color[4])
+MUPDF_WRAP(mupdf_pdf_annot_border_width, float, -1,
+    ret = pdf_annot_border_width(ctx, annot),
+    pdf_annot *annot)
+MUPDF_WRAP(mupdf_pdf_annot_opacity, float, -1,
+    ret = pdf_annot_opacity(ctx, annot),
+    pdf_annot *annot)
+MUPDF_WRAP(mupdf_pdf_annot_has_ink_list, int, -1,
+    ret = pdf_annot_has_ink_list(ctx, annot),
     pdf_annot *annot)
 MUPDF_WRAP(mupdf_get_pixmap_from_image, fz_pixmap*, NULL,
     ret = fz_get_pixmap_from_image(ctx, image, subarea, trans, w, h),

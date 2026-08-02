@@ -64,11 +64,25 @@ local function setPointerDown(slot, down)
     end
 end
 
+-- Android's AMotionEvent tool type (AMOTION_EVENT_TOOL_TYPE_*)
+-- -> KOReader's Input tool type (TOOL_TYPE_*, c.f., frontend/device/input.lua).
+-- Everything we don't know about is reported as a finger.
+local TOOL_TYPE_MAP = {
+    [android.lib.AMOTION_EVENT_TOOL_TYPE_STYLUS]  = 1, -- TOOL_TYPE_PEN
+    [android.lib.AMOTION_EVENT_TOOL_TYPE_ERASER] = 2, -- TOOL_TYPE_ERASER
+}
+
+local function getToolType(event, index)
+    local tool = android.lib.AMotionEvent_getToolType(event, index)
+    return TOOL_TYPE_MAP[tool] or 0 -- TOOL_TYPE_FINGER
+end
+
 local function genTouchDownEvent(event, slot, index)
     local x = android.lib.AMotionEvent_getX(event, index)
     local y = android.lib.AMotionEvent_getY(event, index)
     local timev = genInputTimeval(android.lib.AMotionEvent_getEventTime(event))
     genEmuEvent(C.EV_ABS, C.ABS_MT_SLOT, slot, timev)
+    genEmuEvent(C.EV_ABS, C.ABS_MT_TOOL_TYPE, getToolType(event, index), timev)
     genEmuEvent(C.EV_ABS, C.ABS_MT_TRACKING_ID, slot, timev)
     genEmuEvent(C.EV_ABS, C.ABS_MT_POSITION_X, x, timev)
     genEmuEvent(C.EV_ABS, C.ABS_MT_POSITION_Y, y, timev)
@@ -80,6 +94,7 @@ local function genTouchUpEvent(event, slot, index)
     local y = android.lib.AMotionEvent_getY(event, index)
     local timev = genInputTimeval(android.lib.AMotionEvent_getEventTime(event))
     genEmuEvent(C.EV_ABS, C.ABS_MT_SLOT, slot, timev)
+    genEmuEvent(C.EV_ABS, C.ABS_MT_TOOL_TYPE, getToolType(event, index), timev)
     genEmuEvent(C.EV_ABS, C.ABS_MT_TRACKING_ID, -1, timev)
     genEmuEvent(C.EV_ABS, C.ABS_MT_POSITION_X, x, timev)
     genEmuEvent(C.EV_ABS, C.ABS_MT_POSITION_Y, y, timev)
@@ -91,6 +106,7 @@ local function genTouchMoveEvent(event, timev, slot, index)
     local x = android.lib.AMotionEvent_getX(event, index)
     local y = android.lib.AMotionEvent_getY(event, index)
     genEmuEvent(C.EV_ABS, C.ABS_MT_SLOT, slot, timev)
+    genEmuEvent(C.EV_ABS, C.ABS_MT_TOOL_TYPE, getToolType(event, index), timev)
     genEmuEvent(C.EV_ABS, C.ABS_MT_POSITION_X, x, timev)
     genEmuEvent(C.EV_ABS, C.ABS_MT_POSITION_Y, y, timev)
 end
