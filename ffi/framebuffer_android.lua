@@ -90,7 +90,7 @@ function framebuffer:setRotationMode(mode)
     end
 end
 
-function framebuffer:_updateWindow()
+function framebuffer:_updateWindow(x, y, w, h)
     if android.app.window == nil then
         android.LOGW("cannot blit: no window")
         return
@@ -120,6 +120,14 @@ function framebuffer:_updateWindow()
         bb:setInverse(ext_bb:getInverse())
         bb:setRotation(ext_bb:getRotation())
 
+        -- NOTE: We always copy the whole window here. A region-limited blit
+        -- would leave the parts of the window buffer that fall *outside* the
+        -- dirty rect carrying their previous frame's content; on an e-ink
+        -- panel the einkUpdate region (physical, via getPhysicalRect) is
+        -- driven separately from the logical blit rect, so that stale content
+        -- shows through -- seen as "previous page / previous UI shows through"
+        -- ghosting while live-drawing with a stylus. A (cheap) full copy keeps
+        -- the surface coherent for every partial e-ink update.
         -- getUseCBB should *always* be true on Android, but let's be thorough...
         if bb:getInverse() == 1 and BB:getUseCBB() then
             -- If we're using the CBB (which we should), the invert flag has been thoroughly ignored up until now,
@@ -153,35 +161,35 @@ function framebuffer:refreshFullImp(x, y, w, h) -- luacheck: ignore
 end
 
 function framebuffer:refreshPartialImp(x, y, w, h)
-    self:_updateWindow()
+    self:_updateWindow(x, y, w, h)
     if has_eink_full_support then
         self:_updatePartial(partial, delay_page, x, y, w, h)
     end
 end
 
 function framebuffer:refreshFlashPartialImp(x, y, w, h)
-    self:_updateWindow()
+    self:_updateWindow(x, y, w, h)
     if has_eink_full_support then
         self:_updatePartial(full, delay_page, x, y, w, h)
     end
 end
 
 function framebuffer:refreshUIImp(x, y, w, h)
-    self:_updateWindow()
+    self:_updateWindow(x, y, w, h)
     if has_eink_full_support then
         self:_updatePartial(partial_ui, delay_ui, x, y, w, h)
     end
 end
 
 function framebuffer:refreshFlashUIImp(x, y, w, h)
-    self:_updateWindow()
+    self:_updateWindow(x, y, w, h)
     if has_eink_full_support then
         self:_updatePartial(full_ui, delay_ui, x, y, w, h)
     end
 end
 
 function framebuffer:refreshFastImp(x, y, w, h)
-    self:_updateWindow()
+    self:_updateWindow(x, y, w, h)
     if has_eink_full_support then
         self:_updatePartial(fast, delay_fast, x, y, w, h)
     end
