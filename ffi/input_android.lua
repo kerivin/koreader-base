@@ -165,15 +165,40 @@ local function motionEventHandler(motion_event)
 
         -- This effectively gives us the size of the current MotionEvent array...
         local pointer_count = tonumber(android.lib.AMotionEvent_getPointerCount(motion_event))
+        -- Collect the pointers that are still in contact, as (slot, pointer_index) pairs.
+        local active = {}
         for i = 0, pointer_count - 1 do
             -- So, loop through the array, and if that pointer is still down, move it
             local slot = android.lib.AMotionEvent_getPointerId(motion_event, i)
             if pointers[slot] then
-                genTouchMoveEvent(motion_event, timev, slot, i)
+                active[#active + 1] = { slot = slot, index = i }
             end
         end
 
-        -- Bundle everything in a single input frame
+        -- Android coalesces the samples of a lagging app into a single MotionEvent
+        -- carrying the *batch* in its history (getHistorical*), exposing only the
+        -- latest position via getX/getY. Drain the batch so each digitizer sample
+        -- becomes its own input frame; otherwise an entire burst collapses into a
+        -- single point and strokes come out severely under-sampled ("jagged").
+        local history = tonumber(android.lib.AMotionEvent_getHistorySize(motion_event))
+        for h = 0, history - 1 do
+            local htimev = genInputTimeval(android.lib.AMotionEvent_getHistoricalEventTime(motion_event, h))
+            for __, ptr in ipairs(active) do
+                genEmuEvent(C.EV_ABS, C.ABS_MT_SLOT, ptr.slot, htimev)
+                genEmuEvent(C.EV_ABS, C.ABS_MT_TOOL_TYPE, getToolType(motion_event, ptr.index), htimev)
+                genEmuEvent(C.EV_ABS, C.ABS_MT_POSITION_X,
+                    android.lib.AMotionEvent_getHistoricalX(motion_event, ptr.index, h), htimev)
+                genEmuEvent(C.EV_ABS, C.ABS_MT_POSITION_Y,
+                    android.lib.AMotionEvent_getHistoricalY(motion_event, ptr.index, h), htimev)
+            end
+            -- One input frame per historical sample
+            genEndTouchEvent(motion_event, htimev)
+        end
+
+        -- Current (latest) position as the final input frame.
+        for __, ptr in ipairs(active) do
+            genTouchMoveEvent(motion_event, timev, ptr.slot, ptr.index)
+        end
         genEndTouchEvent(motion_event, timev)
     elseif flags == C.AMOTION_EVENT_ACTION_CANCEL then
         -- Invalidate the pointers, and push a custom event to notify front to do the same.
