@@ -64,9 +64,6 @@ local function setPointerDown(slot, down)
     end
 end
 
--- Android's AMotionEvent tool type (AMOTION_EVENT_TOOL_TYPE_*)
--- -> KOReader's Input tool type (TOOL_TYPE_*, c.f., frontend/device/input.lua).
--- Everything we don't know about is reported as a finger.
 local TOOL_TYPE_MAP = {
     [android.lib.AMOTION_EVENT_TOOL_TYPE_STYLUS]  = 1, -- TOOL_TYPE_PEN
     [android.lib.AMOTION_EVENT_TOOL_TYPE_ERASER] = 2, -- TOOL_TYPE_ERASER
