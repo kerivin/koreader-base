@@ -822,9 +822,7 @@ end
 --   bb_color: { r, g, b } components 0-255.
 --   width   : ink border (line) width in points.
 --   opacity : 0..1.
---   contents: optional /Author string (used as an ownership marker).
--- Returns the created pdf_annot handle (valid while the page is open).
-function page_mt.__index:addInkAnnotation(strokes, bb_color, width, opacity, author)
+function page_mt.__index:addInkAnnotation(strokes, bb_color, width, opacity)
     local n = #strokes
     if n == 0 then return end
 
@@ -866,63 +864,10 @@ function page_mt.__index:addInkAnnotation(strokes, bb_color, width, opacity, aut
     ok = W.mupdf_pdf_set_annot_opacity(self.ctx, annot, opacity or 1.0)
     if not ok then merror(self.ctx, "could not set ink annotation opacity") end
 
-    if author then
-        ok = W.mupdf_pdf_set_annot_author(self.ctx, annot, author)
-        if not ok then merror(self.ctx, "could not set ink annotation author") end
-    end
-
     -- Synthesize the /Rect and /AP appearance stream, without which the
     -- annotation is invisible in desktop PDF viewers (Preview, Acrobat, ...).
     ok = W.mupdf_pdf_update_annot(self.ctx, annot)
     if not ok then merror(self.ctx, "could not update ink annotation") end
-
-    return annot
-end
-
--- Fetch back every /Subtype /Ink annotation present on the page.
--- Each entry is a table with the fields:
---   annot   : the pdf_annot handle (valid while the page is open).
---   author  : the /Author ownership marker, or nil.
---   width   : border width in points.
---   opacity : 0..1.
---   color   : { r, g, b } components 0-1, or nil if unset.
---   strokes : array of strokes; each stroke is an array of { x=, y= } points in
---             native page coordinates.
-function page_mt.__index:getInkAnnotations()
-    local annotations = {}
-    local annot = W.mupdf_pdf_first_annot(self.ctx, ffi.cast("pdf_page*", self.page))
-    while annot ~= nil do
-        if W.mupdf_pdf_annot_type(self.ctx, annot) == M.PDF_ANNOT_INK then
-            local annot_data = { annot = annot }
-            local author = W.mupdf_pdf_annot_author(self.ctx, annot)
-            annot_data.author = author ~= nil and ffi.string(author) or nil
-            annot_data.width = W.mupdf_pdf_annot_border_width(self.ctx, annot)
-            annot_data.opacity = W.mupdf_pdf_annot_opacity(self.ctx, annot)
-            local color = ffi.new("float[4]")
-            local n = ffi.new("int[1]")
-            if W.mupdf_pdf_annot_color(self.ctx, annot, n, color) and n[0] >= 3 then
-                annot_data.color = { color[0], color[1], color[2] }
-            end
-            local stroke_count = W.mupdf_pdf_annot_ink_list_count(self.ctx, annot)
-            if stroke_count > 0 then
-                local strokes = {}
-                for i = 0, stroke_count - 1 do
-                    local vertex_count = W.mupdf_pdf_annot_ink_list_stroke_count(self.ctx, annot, i)
-                    local stroke = {}
-                    for k = 0, vertex_count - 1 do
-                        local vertex = ffi.new("fz_point[1]")
-                        W.mupdf_pdf_annot_ink_list_stroke_vertex(self.ctx, annot, i, k, vertex)
-                        stroke[k+1] = { x = vertex[0].x, y = vertex[0].y }
-                    end
-                    strokes[i+1] = stroke
-                end
-                annot_data.strokes = strokes
-            end
-            table.insert(annotations, annot_data)
-        end
-        annot = W.mupdf_pdf_next_annot(self.ctx, annot)
-    end
-    return annotations
 end
 
 function page_mt.__index:deleteAnnotation(annot)
