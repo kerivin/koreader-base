@@ -175,11 +175,7 @@ local function motionEventHandler(motion_event)
             end
         end
 
-        -- Android coalesces the samples of a lagging app into a single MotionEvent
-        -- carrying the *batch* in its history (getHistorical*), exposing only the
-        -- latest position via getX/getY. Drain the batch so each digitizer sample
-        -- becomes its own input frame; otherwise an entire burst collapses into a
-        -- single point and strokes come out severely under-sampled ("jagged").
+        -- Useful for continious events like drawing
         local history = tonumber(android.lib.AMotionEvent_getHistorySize(motion_event))
         for h = 0, history - 1 do
             local htimev = genInputTimeval(android.lib.AMotionEvent_getHistoricalEventTime(motion_event, h))
@@ -191,11 +187,9 @@ local function motionEventHandler(motion_event)
                 genEmuEvent(C.EV_ABS, C.ABS_MT_POSITION_Y,
                     android.lib.AMotionEvent_getHistoricalY(motion_event, ptr.index, h), htimev)
             end
-            -- One input frame per historical sample
             genEndTouchEvent(motion_event, htimev)
         end
 
-        -- Current (latest) position as the final input frame.
         for __, ptr in ipairs(active) do
             genTouchMoveEvent(motion_event, timev, ptr.slot, ptr.index)
         end
